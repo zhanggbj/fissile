@@ -14,21 +14,28 @@ import (
 // showing which original CV name maps to what secret+key combination.
 func MakeSecrets(secrets model.CVMap, settings ExportSettings) (helm.Node, error) {
 	data := helm.NewMapping()
+	generated := helm.NewMapping()
+
 	for name, cv := range secrets {
-		var value string
+		var value interface{}
 
 		key := util.ConvertNameToKey(name)
 
 		if settings.CreateHelmChart {
-			if settings.UseSecretsGenerator && cv.Generator != nil {
-				// it will be created during runtime
-				continue
-			}
-			if cv.Generator != nil && cv.Generator.Type == model.GeneratorTypePassword {
+			if !settings.UseSecretsGenerator && cv.Generator != nil && cv.Generator.Type == model.GeneratorTypePassword {
 				value = "{{ randAlphaNum 32 | b64enc | quote }}"
 			} else {
-				errString := fmt.Sprintf("%s configuration missing", cv.Name)
-				value = fmt.Sprintf(`{{ required "%s" .Values.env.%s | b64enc | quote }}`, errString, cv.Name)
+				if settings.UseSecretsGenerator && cv.Generator != nil {
+					comment := cv.Description + "\nThis value uses a generated default."
+					if cv.Immutable {
+						comment += " It is also immutable and must not be changed once set."
+					}
+					generated.Add(key, helm.NewNode(value, helm.Comment(comment)))
+					continue
+				} else {
+					errString := fmt.Sprintf("%s configuration missing", cv.Name)
+					value = fmt.Sprintf(`{{ required "%s" .Values.env.%s | b64enc | quote }}`, errString, cv.Name)
+				}
 			}
 		} else {
 			ok, value := cv.Value(settings.Defaults)
@@ -41,15 +48,9 @@ func MakeSecrets(secrets model.CVMap, settings ExportSettings) (helm.Node, error
 		data.Add(key, helm.NewNode(value, helm.Comment(cv.Description)))
 	}
 	data.Sort()
+	data.Merge(generated.Sort())
 
-	secretName := "secret"
-	if settings.UseSecretsGenerator {
-		secretName = "secret-update"
-		if settings.CreateHelmChart {
-			secretName = "secret-update-{{ .Release.Revision }}"
-		}
-	}
-	secret := newKubeConfig("v1", "Secret", secretName)
+	secret := newKubeConfig("v1", "Secret", "secrets")
 	secret.Add("data", data)
 
 	return secret.Sort(), nil
