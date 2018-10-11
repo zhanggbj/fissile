@@ -10,6 +10,8 @@ import (
 const (
 	// RoleNameLabel is a thing
 	RoleNameLabel = "skiff-role-name"
+	// AppNameLabel is to add contextual information in distributed tracing for Istio
+	AppNameLabel = "app"
 	// VolumeStorageClassAnnotation is the annotation label for storage/v1beta1/StorageClass
 	VolumeStorageClassAnnotation = "volume.beta.kubernetes.io/storage-class"
 )
@@ -22,13 +24,21 @@ func newTypeMeta(apiVersion, kind string, modifiers ...helm.NodeModifier) *helm.
 
 func newObjectMeta(name string) *helm.Mapping {
 	meta := helm.NewMapping("name", name)
-	meta.Add("labels", helm.NewMapping(RoleNameLabel, name))
+	labels := helm.NewMapping()
+	labels.Add(RoleNameLabel, name)
+	labels.Add(AppNameLabel, name)
+	meta.Add("labels", labels)
+
 	return meta
 }
 
 func newSelector(name string) *helm.Mapping {
 	meta := helm.NewMapping()
-	meta.Add("matchLabels", helm.NewMapping(RoleNameLabel, name))
+	machedLabels := helm.NewMapping()
+	machedLabels.Add(RoleNameLabel, name)
+	machedLabels.Add(AppNameLabel, name)
+	meta.Add("matchLabels", machedLabels)
+	//meta.Add("matchLabels", helm.NewMapping(RoleNameLabel, name))
 	return meta
 }
 

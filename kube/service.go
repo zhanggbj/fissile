@@ -123,7 +123,11 @@ func NewClusterIPService(role *model.Role, headless bool, public bool, settings 
 	}
 
 	spec := helm.NewMapping()
-	spec.Add("selector", helm.NewMapping(RoleNameLabel, role.Name))
+	//spec.Add("selector", helm.NewMapping(RoleNameLabel, role.Name))
+	selector := helm.NewMapping()
+	selector.Add(RoleNameLabel, role.Name)
+	selector.Add(AppNameLabel, role.Name)
+	spec.Add("selector", selector)
 
 	if settings.CreateHelmChart {
 		spec.Add("type", "{{ if .Values.services.loadbalanced }} LoadBalancer {{ else }} ClusterIP {{ end }}")
@@ -154,7 +158,11 @@ func NewClusterIPService(role *model.Role, headless bool, public bool, settings 
 	}
 
 	service := newTypeMeta("v1", "Service")
-	service.Add("metadata", helm.NewMapping("name", serviceName))
+	//service.Add("metadata", helm.NewMapping("name", serviceName))
+	metadata := helm.NewMapping()
+	metadata.Add("name", serviceName)
+	metadata.Add("label", helm.NewMapping(AppNameLabel, serviceName))
+	metadata.Add("metadata", metadata)
 	service.Add("spec", spec.Sort())
 
 	return service, nil
