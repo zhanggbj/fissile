@@ -139,8 +139,10 @@ func newService(role *model.Role, serviceType newServiceType, settings ExportSet
 	}
 
 	spec := helm.NewMapping()
-
-	selector := helm.NewMapping(RoleNameLabel, role.Name)
+	//selector := helm.NewMapping(RoleNameLabel, role.Name)
+	selector := helm.NewMapping()
+	selector.Add(RoleNameLabel, role.Name)
+	selector.Add(AppNameLabel, role.Name)
 	if role.HasTag(model.RoleTagActivePassive) {
 		selector.Add("skiff-role-active", "true")
 	}
@@ -171,7 +173,11 @@ func newService(role *model.Role, serviceType newServiceType, settings ExportSet
 		panic(fmt.Sprintf("Unexpected service type %d", serviceType))
 	}
 	service := newTypeMeta("v1", "Service")
-	service.Add("metadata", helm.NewMapping("name", serviceName))
+	//service.Add("metadata", helm.NewMapping("name", serviceName))
+	metadata := helm.NewMapping()
+	metadata.Add("name", serviceName)
+	metadata.Add("label", helm.NewMapping(AppNameLabel, serviceName))
+	service.Add("metadata", metadata)
 	service.Add("spec", spec.Sort())
 
 	return service, nil
