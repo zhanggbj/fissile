@@ -67,6 +67,7 @@ const (
 	RoleTagStopOnFailure     = RoleTag("stop-on-failure")
 	RoleTagSequentialStartup = RoleTag("sequential-startup")
 	RoleTagActivePassive     = RoleTag("active-passive")
+	RoleTagIstioManaged      = RoleTag("istio-managed")
 )
 
 // Validate implements several checks for the instance group and its job references. It's run after the

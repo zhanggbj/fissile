@@ -797,10 +797,12 @@ func validateRoleTags(instanceGroup *InstanceGroup) validation.ErrorList {
 		RoleTagActivePassive:     []RoleType{RoleTypeBosh},
 		RoleTagSequentialStartup: []RoleType{RoleTypeBosh},
 		RoleTagStopOnFailure:     []RoleType{RoleTypeBoshTask},
+		RoleTagIstioManaged:      []RoleType{RoleTypeBosh},
 	}
 
 	for tagNum, tag := range instanceGroup.Tags {
 		switch tag {
+		case RoleTagIstioManaged:
 		case RoleTagStopOnFailure:
 		case RoleTagSequentialStartup:
 		case RoleTagActivePassive:
