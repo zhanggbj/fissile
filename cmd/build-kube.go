@@ -124,7 +124,7 @@ func init() {
 	buildKubeCmd.PersistentFlags().BoolP(
 		"istio-complied",
 		"",
-		false,
+		true,
 		"Comply with Istio requirements when generating kube yaml",
 	)
 

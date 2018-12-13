@@ -141,7 +141,7 @@ func init() {
 	buildHelmCmd.PersistentFlags().BoolP(
 		"istio-complied",
 		"",
-		false,
+		true,
 		"Comply with Istio requirements when generating helm chart",
 	)
 
